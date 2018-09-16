@@ -129,12 +129,11 @@
   <ItemGroup>
     <ClInclude Include="client.h" />
     <ClInclude Include="comm.h" />
+    <ClInclude Include="tcp_comm.h" />
     <ClInclude Include="print_handler.h" />
     <ClInclude Include="server.h" />
     <ClInclude Include="string_serializer.h" />
-    <ClInclude Include="tcp_reader.h" />
-    <ClInclude Include="udp_reader.h" />
-    <ClInclude Include="writer.h" />
+    <ClInclude Include="udp_comm.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

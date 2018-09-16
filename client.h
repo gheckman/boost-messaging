@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
+#include <type_traits>
+
 #include <boost\asio.hpp>
 #include <boost\system\error_code.hpp>
-#include <type_traits>
 
 #include "comm.h"
 
@@ -15,7 +16,7 @@ namespace boost_messaging
 	class client_tcp_interface
 	{
 	public:
-		typedef comm<ip::tcp, TSerializer, THandler> comm_t;
+		typedef tcp_comm<TSerializer, THandler> comm_t;
 
 		void set_socket_opts(ip::tcp::socket& socket)
 		{
@@ -30,7 +31,7 @@ namespace boost_messaging
 	class client_udp_interface
 	{
 	public:
-		typedef comm<ip::udp, TSerializer, THandler> comm_t;
+		typedef udp_comm<TSerializer, THandler> comm_t;
 
 		void set_socket_opts(ip::udp::socket& socket) {}
 
@@ -44,26 +45,28 @@ namespace boost_messaging
 	struct client_interface_selector
 	{
 		using type =
-			std::conditional<
+			typename std::conditional<
 				std::is_same<TProtocol, ip::tcp>::value,
 				client_tcp_interface<TSerializer, THandler>,
-				client_udp_interface<TSerializer, THandler>>;
+				client_udp_interface<TSerializer, THandler>>::type;
 	};
 
-	template <typename TSerializer, typename THandler>
+	template <typename TProtocol, typename TSerializer, typename THandler>
 	class client
 	{
 	public:
-		typedef ip::tcp protocol_t;
+		typedef typename TProtocol::resolver resolver_t;
+		typedef typename TProtocol::resolver::query query_t;
+		typedef typename TProtocol::resolver::iterator iterator_t;
 		typedef typename TSerializer::send_t send_t;
-		typedef comm<protocol_t, TSerializer, THandler> comm_t;
-		typedef client_tcp_interface<TSerializer, THandler> interface_t;
+		typedef typename comm_selector<TProtocol, TSerializer, THandler>::type comm_t;
+		typedef typename client_interface_selector<TProtocol, TSerializer, THandler>::type interface_t;
 
 		client(io_service& io_service, const std::string& host, const std::string& port) :
 			host_(host),
 			port_(port),
 			io_service_(io_service),
-			session_(std::make_shared<comm_t>(io_service, protocol_t::socket(io_service)))
+			session_(std::make_shared<comm_t>(io_service, TProtocol::socket(io_service)))
 		{
 			// set_error_callback
 			try_connect();
@@ -93,15 +96,15 @@ namespace boost_messaging
 
 		void try_connect()
 		{
-			protocol_t::resolver resolver(io_service_);
-			protocol_t::resolver::query query(host_, port_);
-			protocol_t::resolver::iterator endpoint_iterator = resolver.resolve(query);
+			resolver_t resolver(io_service_);
+			query_t query(host_, port_);
+			iterator_t endpoint_iterator = resolver.resolve(query);
 
-			auto callback = [this](const boost::system::error_code& error, protocol_t::resolver::iterator it) { connect(error, it); };
+			auto callback = [this](const boost::system::error_code& error, iterator_t it) { connect(error, it); };
 			boost::asio::async_connect(session_->socket(), endpoint_iterator, callback);
 		}
 
-		void connect(const boost::system::error_code& error, protocol_t::resolver::iterator it)
+		void connect(const boost::system::error_code& error, iterator_t it)
 		{
 			if (!error)
 			{

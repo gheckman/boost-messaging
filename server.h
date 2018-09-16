@@ -17,7 +17,7 @@ namespace boost_messaging
 	class server_tcp_interface
 	{
 	public:
-		typedef comm<ip::tcp, TSerializer, THandler> comm_t;
+		typedef tcp_comm<TSerializer, THandler> comm_t;
 
 		server_tcp_interface(io_service& io_service, const ip::tcp::endpoint& endpoint) :
 			io_service_(io_service),
@@ -66,43 +66,44 @@ namespace boost_messaging
 	class server_udp_interface
 	{
 	public:
-		typedef comm<ip::udp, TSerializer, THandler> comm_t;
+		typedef udp_comm<TSerializer, THandler> comm_t;
 
-		server_udp_interface(io_service& io_service, const ip::udp::endpoint& endpoint)
+		server_udp_interface(io_service& io_service, const ip::udp::endpoint& endpoint) :
+			session_(std::make_shared<comm_t>(io_service, ip::udp::socket(io_service, endpoint)))
 		{ }
 
 		void start_accept()
 		{
-			session_.read();
+			session_->read();
 		}
 
 		void write()
 		{
-			session_.write();
+			session_->write();
 		}
 	private:
-		comm_t session_;
+		std::shared_ptr<comm_t> session_;
 	};
 
-	//template <typename TProtocol>
-	//struct server_selector
-	//{
-	//	using type =
-	//		std::conditional<
-	//		std::is_same<TProtocol, ip::tcp>::value,
-	//		server_tcp_interface,
-	//		server_udp_interface>;
-	//};
+	template <typename TProtocol, typename TSerializer, typename THandler>
+	struct server_interface_selector
+	{
+		using type =
+			typename std::conditional<
+			std::is_same<TProtocol, ip::tcp>::value,
+			server_tcp_interface<TSerializer, THandler>,
+			server_udp_interface<TSerializer, THandler>>::type;
+	};
 
-	template <typename TSerializer, typename THandler>
+	template <typename TProtocol, typename TSerializer, typename THandler>
 	class server
 	{
 	public:
-		typedef ip::tcp protocol_t;
-		typedef comm<protocol_t, TSerializer, THandler> comm_t;
-		typedef server_tcp_interface<TSerializer, THandler> interface_t;
+		typedef typename TProtocol::endpoint endpoint_t;
+		typedef typename comm_selector<TProtocol, TSerializer, THandler>::type comm_t;
+		typedef typename server_interface_selector<TProtocol, TSerializer, THandler>::type interface_t;
 
-		server(io_service& io_service, const protocol_t::endpoint& endpoint) :
+		server(io_service& io_service, const endpoint_t& endpoint) :
 			interface_(io_service, endpoint)
 		{
 			interface_.start_accept();

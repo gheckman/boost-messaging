@@ -21,22 +21,19 @@
     <ClInclude Include="server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tcp_reader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="udp_reader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="writer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="comm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="print_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="string_serializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tcp_comm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="udp_comm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="comm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
