@@ -60,11 +60,10 @@ namespace boost_messaging
 			{
 				auto header_size = serializer_.header_size();
 				auto body_begin = read_buffer_.begin() + header_size;
-				std::vector<char> header(read_buffer_.begin(), body_begin);
-				auto header_is_valid = serializer_.validate_header(header);
-				auto body_size = serializer_.body_size(header);
+				auto header_is_valid = serializer_.validate_header(read_buffer_.begin(), body_begin);
+				auto body_size = serializer_.body_size(read_buffer_.begin(), body_begin);
 				auto body_end = body_begin + body_size;
-				auto message = serializer_.deserialize(std::vector<char>(body_begin, body_end));
+				auto message = serializer_.deserialize(body_begin, body_end);
 				handler_.handle(message);
 				auto callback = [this, sp = this->shared_from_this()](const boost::system::error_code& error, size_t) { read_msg(error); };
 				socket_.async_receive_from(boost::asio::buffer(read_buffer_), endpoint_, callback);

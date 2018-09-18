@@ -56,9 +56,9 @@ namespace boost_messaging
 		{
 			if (!error)
 			{
-				auto header_is_valid = serializer_.validate_header(read_buffer_);
+				auto header_is_valid = serializer_.validate_header(read_buffer_.begin(), read_buffer_.end());
 				// TODO [1] do something if header isn't valid
-				auto body_size = serializer_.body_size(read_buffer_);
+				auto body_size = serializer_.body_size(read_buffer_.begin(), read_buffer_.end());
 				read_buffer_.resize(body_size);
 				auto callback = [this, sp = this->shared_from_this()](const boost::system::error_code& error, size_t) { read_body(error); };
 				async_read(socket_, boost::asio::buffer(read_buffer_), callback);
@@ -71,7 +71,7 @@ namespace boost_messaging
 		{
 			if (!error)
 			{
-				auto mesage = serializer_.deserialize(read_buffer_);
+				auto mesage = serializer_.deserialize(read_buffer_.begin(), read_buffer_.end());
 				handler_.handle(mesage);
 
 				auto header_size = serializer_.header_size();

@@ -330,3 +330,7 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# Doxygen generated files
+docs/html/
+docs/latex/
